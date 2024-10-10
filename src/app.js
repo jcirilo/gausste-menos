@@ -1,52 +1,13 @@
 const BRL = new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'})
 
-const matrizEntrada = {
-    cabecalho: ['fornecedor','orçamento'],
-    linhas: []
-}
-
-function pivotear(matriz) {
-    let matrizCopia = {
-        cabecalho: matriz.cabecalho,
-        linhas: matriz.linhas.map(e => e)
-    }
-    return matrizCopia
-}
-
-function adicionarAMatriz(matriz, dados) {
-    let linhaFornecedor = matriz.linhas.findIndex(l => l[0] == dados.fornecedor)
-
-    if (linhaFornecedor < 0) {
-        matriz.cabecalho.forEach(e=> {
-            if (e == 'fornecedor') {
-                matriz.linhas.push([dados.fornecedor])
-            } else {
-                if (e == 'orçamento') {
-                    matriz.linhas[matriz.linhas.length-1].push($("#orcamento").maskMoney('unmasked')[0])
-                } else {
-                    matriz.linhas[matriz.linhas.length-1].push(NaN)
-                }
-            }
-        })
-        linhaFornecedor = matriz.linhas.length-1
-    }
-
-    let colunaProduto = matriz.cabecalho.findIndex(e => e == dados.coluna)
-
-    if (colunaProduto < 0) {
-        let aux = matriz.cabecalho.pop()
-        matriz.cabecalho.push(dados.coluna)
-        matriz.cabecalho.push(aux)
-        matriz.linhas.forEach(linha => {
-            let aux = linha.pop()
-            linha.push(NaN)
-            linha.push(aux)
-        })
-        colunaProduto = matriz.cabecalho.length-2
-    }
-
-    matriz.linhas[linhaFornecedor][colunaProduto] = dados.preco
-}
+const tabelaEntrada = new Tabela(
+    ['fornecedor', 'orçamento'],
+    []
+)
+const tabelaSolucao = new Tabela(
+    ['fornecedor', 'quantidade'],
+    []
+)
 
 function limparTabela(idTabela) {
     $(idTabela).find('table').remove()
@@ -81,9 +42,62 @@ function renderizarTabela(idTabela, tabela) {
     }
 }
 
-renderizarTabela("#matriz-gerada", matrizEntrada)
-renderizarTabela("#matriz-pivoteada", pivotear(matrizEntrada))
-renderizarTabela("#matriz-solucao", {cabecalho: ['fornecedor', 'quantidade'],linhas: []})
+function renderizarTabelaSolucao(idTabela, tabela) {
+    $(idTabela).append(
+        '<table class="table table-striped">'+
+            '<thead><tr></tr></thead>'+
+            '<tbody></tbody>'+
+        '</table>')
+
+    for (i=0; i<tabela.cabecalho.length; i++) {
+        $(idTabela)
+        .find("table")
+        .find("thead")
+        .find("tr")
+        .append('<th scope="col">' + tabela.cabecalho[i] + '</th>')
+    }
+
+    for (i=0; i<tabela.linhas.length; i++) {
+        let coluna = '<th scope="row">'+tabela.linhas[i][0]+'</th>'+
+                     '<td>'+tabela.linhas[i][1]+'</td>'
+
+        $(idTabela)
+        .find("table")
+        .find("tbody")
+        .append('<tr>'+coluna+'</tr>')
+    }
+        
+}
+
+function atualizarRenderSolucao() {
+    $("#matriz-solucao").children().remove()
+    try {
+        let determinante = math.det(tabelaEntrada.getA())
+        if (determinante == 0) {
+            $("#matriz-solucao").append('<div class="card-body">Sistema possui nenhuma ou infinitas soluções (determinante = 0)</div>')
+        } else if (tabelaEntrada.linhas.length == 0) {
+            $("#matriz-solucao").append('<div class="card-body">Matriz vazia</div>')
+        } else if (tabelaEntrada.linhas.find(e => e.find(el => el == NaN)) == NaN) {
+            $("#matriz-solucao").append('<div class="card-body">Matriz contém cedulas vazias</div>')
+        } else {
+            try {
+                let tabelaPivoteada = tabelaEntrada.getPivot()
+                let x = gaussSeidel(tabelaPivoteada.getA(), tabelaPivoteada.getB())
+                let tabela = new Tabela(
+                    ["fornecedor", "quantidade"],
+                    []
+                )
+                tabelaPivoteada.linhas.forEach((e, i) => tabela.linhas.push([e[0], x[i]]))
+                renderizarTabelaSolucao("#matriz-solucao", tabela)
+            } catch (e) {
+                $("#matriz-solucao").append('<div class="card-body">'+e.message+'</div>')
+            }
+    
+        }
+    } catch (error) {
+        $("#matriz-solucao").append('<div class="card-body"> A Matriz não é quadrada </div>')
+    }
+}
 
 function liveSearch() {
     $("#resultado-busca").html('')
@@ -130,29 +144,31 @@ function novoElementoBusca(data) {
 }
 
 $("#orcamento").on('keyup', e => {
-    let linhaFornecedor = matrizEntrada.linhas.findIndex(e => e[0] == $("#fornecedor").val())
+    let linhaFornecedor = tabelaEntrada.linhas.findIndex(e => e[0] == $("#fornecedor").val())
     if (linhaFornecedor > -1) {
-        matrizEntrada.linhas[linhaFornecedor].pop()
-        matrizEntrada.linhas[linhaFornecedor].push($("#orcamento").maskMoney('unmasked')[0])
+        tabelaEntrada.linhas[linhaFornecedor].pop()
+        tabelaEntrada.linhas[linhaFornecedor].push($("#orcamento").maskMoney('unmasked')[0])
     }
     limparTabela("#matriz-gerada")
     limparTabela("#matriz-pivoteada")
-    renderizarTabela("#matriz-gerada", matrizEntrada)
-    renderizarTabela("#matriz-pivoteada", matrizEntrada)
+    renderizarTabela("#matriz-gerada", tabelaEntrada)
+    renderizarTabela("#matriz-pivoteada", tabelaEntrada.getPivot())
 })
 
 $("#resultado-busca").on('click', 'li', e => {
-    dados = {
-        'fornecedor': e.currentTarget.attributes.fornecedor.value, 
-        'produto': e.currentTarget.attributes.produto.value, 
-        'preco': e.currentTarget.attributes.preco.value,
-        'coluna': e.currentTarget.attributes.coluna.value
-    }
-    adicionarAMatriz(matrizEntrada, dados)
+    let item = new Item(
+        e.currentTarget.attributes.fornecedor.value,
+        e.currentTarget.attributes.produto.value,
+        e.currentTarget.attributes.preco.value,
+        e.currentTarget.attributes.coluna.value
+    )
+
+    tabelaEntrada.adicionar(item, $("#orcamento").maskMoney('unmasked')[0])
     limparTabela("#matriz-gerada")
     limparTabela("#matriz-pivoteada")
-    renderizarTabela("#matriz-gerada", matrizEntrada)
-    renderizarTabela("#matriz-pivoteada", pivotear(matrizEntrada))
+    renderizarTabela("#matriz-gerada", tabelaEntrada)
+    renderizarTabela("#matriz-pivoteada", tabelaEntrada.getPivot())
+    atualizarRenderSolucao()
     $("#resultado-busca").children('li').remove()
     $("#buscar-produto").val("")
 })
@@ -166,3 +182,35 @@ $("#orcamento").maskMoney(
 });
 
 $("#buscar-produto").on('keyup', liveSearch)
+
+renderizarTabela("#matriz-gerada", tabelaEntrada)
+renderizarTabela("#matriz-pivoteada", tabelaEntrada.getPivot())
+atualizarRenderSolucao()
+
+// $("#matriz-gerada").click(e => {
+//     let fornecedores = ["Alpha","Beta","Gamma","Sigma","Theta","Delta","Epsilon","Omega","Phi","Mi"]
+//     console.log(fornecedores.findIndex(fornecedor => fornecedor == e.target.textContent))
+//     if (fornecedores.findIndex(fornecedor => fornecedor == e.target.textContent) > -1) {
+//         $("#fornecedor").children().each((i, el) => {
+//             $(el).removeAttr('selected')
+//             if ($(el).val() == e.target.textContent) {
+//                 $(el).attr('selected', true)
+//             }
+//         })
+//     }
+// })
+
+// $("#matriz-pivoteada").click(e => {
+//     let fornecedores = ["Alpha","Beta","Gamma","Sigma","Theta","Delta","Epsilon","Omega","Phi","Mi"]
+//     console.log(fornecedores.findIndex(fornecedor => fornecedor == e.target.textContent))
+//     if (fornecedores.findIndex(fornecedor => fornecedor == e.target.textContent) > -1) {
+//         $("#fornecedor").children().each((i, el) => {
+//             $(el).attr('selected', false)
+//         })
+//         $("#fornecedor").children().each((i, el) => {
+//             if ($(el).val() == e.target.textContent) {
+//                 $(el).attr('selected', true)
+//             }
+//         })
+//     }
+// })
