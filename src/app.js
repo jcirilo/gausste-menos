@@ -153,6 +153,7 @@ $("#orcamento").on('keyup', e => {
     limparTabela("#matriz-pivoteada")
     renderizarTabela("#matriz-gerada", tabelaEntrada)
     renderizarTabela("#matriz-pivoteada", tabelaEntrada.getPivot())
+    atualizarRenderSolucao()
 })
 
 $("#resultado-busca").on('click', 'li', e => {
