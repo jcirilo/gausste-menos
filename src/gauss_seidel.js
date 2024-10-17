@@ -1,4 +1,4 @@
-function gaussSeidel(A, b, tolerance = 1e-10, maxIterations = 1000) {
+function gaussSeidel(A, b, tolerancia=1e-10, maxIterations = 1000) {
 
     const n = b.length;
     let x = new Array(n).fill(0); // Vetor de solução inicial
@@ -22,12 +22,12 @@ function gaussSeidel(A, b, tolerance = 1e-10, maxIterations = 1000) {
             error += Math.abs(xNew[i] - x[i]);
         }
 
-        if (error < tolerance) {
+        if (error < tolerancia) {
             return xNew;
         }
 
         x = [...xNew];
     }
 
-    throw new Error('Gauss-Seidel não convergiu dentro do número máximo de iterações (' + maxIterations + ')');
+    throw new Error('Gauss-Seidel não convergiu dentro do número máximo de iterações (' + maxIterations + ') para o erro relativo ' + tolerancia);
 }

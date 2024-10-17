@@ -17,8 +17,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.2.0/math.js" integrity="sha512-K6yeEH8HDerhMdJyfx5uSdY0YHQAu2R0KhwGQ9Jzvh0qZPUjceeV7ch0BZz9w6UY+TgKldDzsQWVN+XeJ3PSzw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>
 <body class="g-body overflow-y-scroll" data-bs-theme="light">
+    <span class="position-absolute bg-warning text-white p-2 text-center small" style="transform:rotate(-45deg);top:30px; left:-100px; width: 300px;">
+        experimental
+    </span>
     <header class="border-bottom border-1 header p-2 bg-body-secondary mb-4">
-        <div class="container-sm" style="max-width: 480px;">
+        <div class="container">
             <h1 class="ubuntu-bold text-xl text-center align-items-center" style="text-align: center;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-piggy-bank" viewBox="0 0 16 16">
                     <path d="M5 6.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.138-1.496A6.6 6.6 0 0 1 7.964 4.5c.666 0 1.303.097 1.893.273a.5.5 0 0 0 .286-.958A7.6 7.6 0 0 0 7.964 3.5c-.734 0-1.441.103-2.102.292a.5.5 0 1 0 .276.962"/>
@@ -69,7 +72,7 @@
                     <div class="form-floating mb-3">
                         <input id="buscar-produto" placeholder="Buscar..." data-role="tagsinput" type="text" class="form-control" aria-label="Entre com a lista de produtos desejada" aria-describedby="inputGroup-sizing-default">
                         <label for="produto-input">Buscar</label>
-                        <ul id="resultado-busca" class="z-3 list-group position-absolute overflow-y-scroll overflow-x-hidden w-100" style="max-height: 200px;"></ul>
+                        <ul id="resultado-busca" class="z-3 list-group position-absolute overflow-y-scroll overflow-x-hidden w-100" style="max-height: 260px;"></ul>
                     </div>
                 </div>
                 <div class="card bg-body-secondary p-4 mb-4">
@@ -99,6 +102,7 @@
         </div>
     </main>
 </body>
+<script type="text/javascript" src="./src/utils.js"></script>
 <script type="text/javascript" src="./src/gauss_seidel.js"></script>
 <script type="text/javascript" src="./src/Item.js"></script>
 <script type="text/javascript" src="./src/Tabela.js"></script>

@@ -5,7 +5,7 @@ class Tabela {
         this.linhas = linhas
     }
 
-    adicionar(item, orcamento = NaN) {
+    adicionar(item, orcamento=0) {
         let linhaFornecedor = this.linhas.findIndex(l => l[0] == item.fornecedor)
 
         if (linhaFornecedor < 0) {
@@ -16,7 +16,7 @@ class Tabela {
                     if (e == 'orçamento') {
                         this.linhas[this.linhas.length - 1].push(orcamento)
                     } else {
-                        this.linhas[this.linhas.length - 1].push(NaN)
+                        this.linhas[this.linhas.length - 1].push('--')
                     }
                 }
             })
@@ -31,7 +31,7 @@ class Tabela {
             this.cabecalho.push(aux)
             this.linhas.forEach(linha => {
                 let aux = linha.pop()
-                linha.push(NaN)
+                linha.push('--')
                 linha.push(aux)
             })
             colunaProduto = this.cabecalho.length - 2
@@ -49,24 +49,34 @@ class Tabela {
     }
 
     getPivot() {
-        let tabela = new Tabela(this.cabecalho.map(e => e), this.linhas.map(e => e))
-        let linPivot = 0
-        let maiorLinha = linPivot
-        let aux = null
+        let cabecalho= []
+        let linhas = []
 
-        for (let colPivot = 1; colPivot < tabela.linhas.length; colPivot++) {
-            for (let linComp = linPivot + 1; linComp < tabela.linhas.length; linComp++) {
-                if (tabela.linhas[linComp][colPivot] > tabela.linhas[linPivot][colPivot]) {
-                    maiorLinha = linComp
-                }
-            }
-            aux = tabela.linhas[linPivot]
-            tabela.linhas[linPivot] = tabela.linhas[maiorLinha]
-            tabela.linhas[maiorLinha] = aux
-            linPivot = colPivot
-            maiorLinha = linPivot
+        for (let i=0; i<this.cabecalho.length; i++) {
+            cabecalho.push(this.cabecalho[i])
         }
 
-        return tabela
+        for (let i=0; i<this.linhas.length; i++) {
+            linhas.push([])
+            for (let j=0; j<this.linhas[i].length; j++) {
+                linhas[i].push(this.linhas[i][j])
+            }
+        }
+
+        let linha = 0
+        let pivo = linha+1
+        let aux = null
+        for (;linha<linhas.length; linha++) {
+            pivo = linha+1
+            for (let linhaComp=linha+1; linhaComp<linhas.length; linhaComp++) {
+                if (linhas[linhaComp][pivo] > linhas[linha][pivo]) {
+                    aux = linhas[linha]
+                    linhas[linha] = linhas[linhaComp]
+                    linhas[linhaComp] = aux
+                }
+            }
+        }
+
+        return new Tabela(cabecalho, linhas)
     }
 }
